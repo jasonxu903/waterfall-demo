@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://cdn.bootcss.com/jquery/2.2.4/jquery.js"></script>
+
+    <title>Waterfall Demo</title>
+
+    <style>
+        .content {
+            position: relative;
+        }
+
+        .item {
+            position: absolute;
+            width: 200px;
+            margin-right: 10px;
+            margin-top: 10px;
+            transition: all .5s;
+        }
+
+        .h1 {
+            height: 200px;
+            background-color: #f4b300;
+        }
+
+        .h2 {
+            height: 300px;
+            background-color: #691BB8;
+        }
+
+        .h3 {
+            height: 400px;
+            background-color: #006ac1;
+        }
+
+    </style>
+</head>
+<body>
+<div class="content">
+    <div class="item h1">
+        1
+    </div>
+    <div class="item h3">
+        2
+    </div>
+    <div class="item h2">
+        3
+    </div>
+    <div class="item h1">
+        4
+    </div>
+    <div class="item h1">
+        5
+    </div>
+    <div class="item h3">
+        6
+    </div>
+    <div class="item h3">
+        7
+    </div>
+    <div class="item h2">
+        8
+    </div>
+    <div class="item h1">
+        9
+    </div>
+    <div class="item h3">
+        10
+    </div>
+    <div class="item h3">
+        11
+    </div>
+    <div class="item h3">
+        12
+    </div>
+    <div class="item h2">
+        13
+    </div>
+    <div class="item h2">
+        14
+    </div>
+</div>
+
+<script>
+
+    // 1. 得出总列数
+    // 2. 初始化一个数组，放置每一列的高度值，每一列的高度初始为0
+    // 3. 遍历每一个item，得到一个高度值最小的列，按顺序将一个item放置到这一列
+    // 4. item的top值是这一列的高度值，left值是item的宽度乘以该列的index值，以此定位
+    // 5. item被放置到指定列数后，要把该item的高度增加到该列的总高度上去，即更新item数组里对应的值
+    // 6. 用一个立即执行函数表达式封装代码块，返回一个值以供调用方法
+
+    var waterfall = (function () {
+        function init() {
+            waterfall()
+
+            $(window).resize(function () {
+                waterfall()
+            })
+        }
+
+        function waterfall() {
+            var colCount = parseInt($('.content').width() / $('.item').width())
+            var itemArr = []
+
+            for (var i = 0; i < colCount; i++) {
+                itemArr[i] = 0
+            }
+
+            $('.item').each(function () {
+                var minVal = Math.min.apply(null, itemArr)
+                var minIdx = itemArr.indexOf(minVal)
+
+                $(this).css({
+                    top: itemArr[minIdx],
+                    left: $(this).outerWidth(true) * minIdx
+                })
+
+                itemArr[minIdx] += $(this).outerHeight(true)
+            })
+        }
+
+        return {
+            init: init
+        }
+    })()
+
+    waterfall.init()
+</script>
+</body>
+</html>
