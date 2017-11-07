@@ -104,7 +104,9 @@
         }
 
         function waterfall() {
-            var colCount = parseInt($('.content').width() / $('.item').width())
+            var ctWidth = $('.content').width()
+            var nodeWidth = $('.item').outerWidth(true)
+            var colCount = parseInt(ctWidth / nodeWidth)
             var itemArr = []
 
             for (var i = 0; i < colCount; i++) {
