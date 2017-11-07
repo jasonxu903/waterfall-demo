@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://cdn.bootcss.com/jquery/2.2.4/jquery.js"></script>
+
+    <title>Waterfall Jsonp Demo</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        ul,
+        li {
+            list-style: none;
+        }
+
+        .ct {
+            position: relative;
+            width: 900px;
+            margin: 0 auto;
+        }
+
+        .item {
+            position: absolute;
+            width: 260px;
+            margin: 10px;
+            padding: 9px;
+            border: 1px solid #aaa;
+            background-color: #fff;
+        }
+
+        .hide {
+            visibility: hidden;
+        }
+
+        .item img {
+            width: 100%;
+        }
+
+        .item h4 {
+            margin-top: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #aaa;
+        }
+
+        .item p {
+            margin: 10px 5px;
+            font-size: 12px;
+            line-height: 1.8em;
+        }
+
+        .load-more {
+            height: 20px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <ul class="ct">
+        <li class="item hide"></li>
+    </ul>
+</div>
+<div class="load-more"></div>
+
+<script>
+    // 1. 获取数据
+    // 2. 将数据构造成html节点
+    // 3. 用瀑布流布局将节点放置到页面上
+    // 4. 触发特定事件再次索取数据
+    // 5. 重复以上步骤
+
+    //    function placeNode() {
+    //        getData(function (data) {
+    //            node = constNode(data)
+    //            waterfall(node)
+    //        })
+    //    }
+    // http://platform.sina.com.cn/slide/album_tech?jsoncallback=func&app_key=1271687855&num=3&page=4
+
+    var curPage = 1
+    var perPageCount = 10
+
+    var ctWidth = $('.ct').width()
+    var nodeWidth = $('.hide').outerWidth(true)
+    var colCount = parseInt(ctWidth / nodeWidth)
+    var colArr = []
+    for (var i = 0; i < colCount; i++) {
+        colArr[i] = 0
+    }
+
+    var isDataArrive = false
+    var clock
+
+    showNews()
+    
+    $(window).scroll(function () {
+        if (isDataArrive) return
+        if (clock) {
+            clearTimeout(clock)
+        }
+        clock = setTimeout(function () {
+            if (isVisibility($('.load-more'))) {
+                showNews()
+            }
+        }, 100)
+    })
+
+    function showNews() {
+        isDataArrive = true
+        getData(function (newsData) {
+            $.each(newsData, function (idx, news) {
+                var $newsNode = getNode(news)
+                $newsNode.find('img').load(function () {
+                    $('.ct').append($newsNode)
+                    waterfall($newsNode)
+                })
+            })
+        })
+        isDataArrive = false
+    }
+
+    function getData(callback) {
+        $.ajax({
+            url: 'http://platform.sina.com.cn/slide/album_tech',
+            dataType: 'jsonp',
+            jsonp: 'jsoncallback',
+            data: {
+                app_key: 1271687855,
+                num: perPageCount,
+                page: curPage
+            }
+        }).done(function (ret) {
+            if (ret && ret.status && ret.status.code === '0') {
+                callback(ret.data)
+                curPage++
+            } else {
+                console.log('error')
+            }
+        })
+    }
+    
+    function getNode(data) {
+        var tpl = ''
+        tpl += '<li class="item">'
+        tpl += '<a href="' + data.url + '"><img src="' + data.img_url + '"></a>'
+        tpl += '<h4>' + data.short_name + '</h4>'
+        tpl += '<p>' + data.short_intro + '</p>'
+        tpl += '</li>'
+
+        return $(tpl)
+    }
+
+
+    // 1. 得出总列数
+    // 2. 初始化一个数组，放置每一列的高度值，每一列的高度初始为0
+    // 3. 遍历每一个item，得到一个高度值最小的列，按顺序将一个item放置到这一列
+    // 4. item的top值是这一列的高度值，left值是item的宽度乘以该列的index值，以此定位
+    // 5. item被放置到指定列数后，要把该item的高度增加到该列的总高度上去，即更新item数组里对应的值
+    // 6. 将数组里的最大值（高度最大的一列）赋值给父容器的height（绝对定位撑不开父容器的高度）
+    
+    function waterfall($nodes) {
+        $nodes.each(function () {
+            var minHeight = Math.min.apply(null, colArr)
+            var minIdx = colArr.indexOf(minHeight)
+
+            $(this).css({
+                top: colArr[minIdx],
+                left: nodeWidth * minIdx
+            })
+            colArr[minIdx] += $(this).outerHeight(true)
+            $('.ct').height(Math.max.apply(null, colArr))
+
+            console.log($nodes.length)
+        })
+    }
+
+    function isVisibility($el) {
+        var scrollHeight = $(window).scrollTop()
+        var windowHeight = $(window).height()
+        var top = $el.offset().top
+
+        return top < scrollHeight + windowHeight + 500;
+    }
+</script>
+</body>
+</html>
