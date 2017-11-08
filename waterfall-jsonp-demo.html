@@ -99,7 +99,7 @@
     var clock
 
     showNews()
-    
+
     $(window).scroll(function () {
         if (isDataArrive) return
         if (clock) {
@@ -138,8 +138,13 @@
             }
         }).done(function (ret) {
             if (ret && ret.status && ret.status.code === '0') {
-                callback(ret.data)
-                curPage++
+                // 判断触发点是否在可视范围内，如果在，加载数据，并再次调用函数
+                // 如果调用函数时触发点已经消失在可视范围内，那么函数执行到这里时返回false，不加载数据
+                if (isVisibility($('.load-more'))) {
+                    callback(ret.data)
+                    curPage++
+                    getData(callback)
+                }
             } else {
                 console.log('error')
             }
@@ -176,8 +181,6 @@
             })
             colArr[minIdx] += $(this).outerHeight(true)
             $('.ct').height(Math.max.apply(null, colArr))
-
-            console.log($nodes.length)
         })
     }
 
@@ -186,7 +189,7 @@
         var windowHeight = $(window).height()
         var top = $el.offset().top
 
-        return top < scrollHeight + windowHeight + 500;
+        return top < scrollHeight + windowHeight
     }
 </script>
 </body>
